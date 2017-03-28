@@ -140,9 +140,7 @@ public class LogCatWindow : EditorWindow
         GUI.enabled = true;
         if( GUILayout.Button( "Clear", GUILayout.Width( 55f ) ) )
         {
-            oldestLogIndex = 0;
-            nextLogIndex = 0;
-            count = 0;
+            ClearLogCat();
         }
 
         // Create filters
@@ -222,6 +220,41 @@ public class LogCatWindow : EditorWindow
         };
         logCatProcess.BeginErrorReadLine();
         logCatProcess.BeginOutputReadLine();
+
+        oldestLogIndex = 0;
+        nextLogIndex = 0;
+        count = 0;
+    }
+
+    private void ClearLogCat()
+    {
+        bool restartLogCat = false;
+        if( logCatProcess != null )
+        {
+            restartLogCat = true;
+            StopLogCat();
+        }
+
+        // Start `adb logcat` with -c argument
+        ProcessStartInfo logClearProcessInfo = new ProcessStartInfo();
+        logClearProcessInfo.CreateNoWindow = true;
+        logClearProcessInfo.UseShellExecute = false;
+        logClearProcessInfo.FileName = EditorPrefs.GetString( "AndroidSdkRoot" ) + "/platform-tools/adb";
+        logClearProcessInfo.WindowStyle = ProcessWindowStyle.Hidden;
+
+        // Add additional -s argument for filtering by Unity tag.
+        logClearProcessInfo.Arguments = "logcat -c";
+
+        Process.Start( logClearProcessInfo );
+
+        if( restartLogCat )
+            StartLogCat();
+        else
+        {
+            oldestLogIndex = 0;
+            nextLogIndex = 0;
+            count = 0;
+        }
     }
 
     private void StopLogCat()
