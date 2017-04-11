@@ -34,7 +34,7 @@ namespace LogCatExtension
 		}
 
 
-		private void StartLogCat()
+		public void StartLogCat()
 		{
 			if( logCatProcess != null )
 				StopLogCat();
@@ -49,7 +49,7 @@ namespace LogCatExtension
 			logProcessInfo.WindowStyle = ProcessWindowStyle.Hidden;
 
 			// Add additional -s argument for filtering by Unity tag.
-			logProcessInfo.Arguments = "devices -l";//LOGCAT + ( prefilterOnlyUnity ? " -s Unity" : "" );
+			logProcessInfo.Arguments = LOGCAT;// TODO: "devices -l";
 
 			logCatProcess = Process.Start( logProcessInfo );
 
@@ -71,7 +71,7 @@ namespace LogCatExtension
 			count = 0;
 		}
 
-		private void ClearLogCat()
+		public void ClearLogCat()
 		{
 			bool restartLogCat = false;
 			if( logCatProcess != null )
@@ -102,7 +102,7 @@ namespace LogCatExtension
 			}
 		}
 
-		private void StopLogCat()
+		public void StopLogCat()
 		{
 			if( logCatProcess == null )
 				return;
@@ -123,8 +123,20 @@ namespace LogCatExtension
 			}
 		}
 
+		public List<LogCatLog> GetLogsList(){
+			List<LogCatLog> logCatList = new List<LogCatLog> ();
 
-		void UpdateLogs()
+			for( int index = oldestLogIndex, i = 0; i < count; i++ )
+			{
+				LogCatLog log = logsList[index];
+				logCatList.Add (log);
+				index = ( index + 1 ) % CAPACITY;
+			}
+
+			return logCatList;
+		}
+
+		public bool ShouldRepaint()
 		{
 			if( EditorApplication.timeSinceStartup > nextUpdateTime )
 			{
@@ -165,13 +177,18 @@ namespace LogCatExtension
 					}
 				}
 
-				if( shouldRepaint )
-					//TODO: BOOLEAN RETURN EXTRACTION Repaint();
-
 				nextUpdateTime = EditorApplication.timeSinceStartup + UPDATE_FREQUENCY;
+
+				if (shouldRepaint)
+					return true;
 			}
+
+			return false;
 		}
 
+		public bool IsLogCatProcessRunning(){
+			return logCatProcess != null;
+		}
 
 		private void AddLog( LogCatLog log )
 		{
