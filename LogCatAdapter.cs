@@ -29,6 +29,8 @@ namespace LogCatExtension
 		private int nextLogIndex = 0;
 		private int count = 0;
 
+		private string currentDeviceId = String.Empty;
+
 		public LogCatAdapter()
 		{
 		}
@@ -44,14 +46,16 @@ namespace LogCatExtension
 			return logProcessInfo;
 		}
 
-		public void StartLogCat()
+		public void StartLogCat(string selectedDeviceId)
 		{
+			currentDeviceId = selectedDeviceId;
+
 			if( logCatProcess != null )
 				StopLogCat();
 
 			// Start `adb logcat` (with additional optional arguments) process for filtering
 			ProcessStartInfo logProcessInfo = DefaultProcestStartInfo ();
-			logProcessInfo.Arguments = LOGCAT;
+			logProcessInfo.Arguments = (currentDeviceId == String.Empty) ? LOGCAT : "-s " + currentDeviceId +" "+ LOGCAT;
 			logCatProcess = Process.Start( logProcessInfo );
 
 			logCatProcess.ErrorDataReceived += ( sender, errorLine ) =>
@@ -88,7 +92,7 @@ namespace LogCatExtension
 			Process.Start( logClearProcessInfo );
 
 			if( restartLogCat )
-				StartLogCat();
+				StartLogCat(currentDeviceId);
 			else
 			{
 				oldestLogIndex = 0;

@@ -30,6 +30,10 @@ namespace LogCatExtension
 		int selectedToggle = 0;
 		string[] toggleOptions = new string[] { "Str", "Regex", "TimeSpan" };
 
+		// Devices
+		int selectedDevice = 0;
+		string selectedDeviceId = String.Empty;
+
 		// Time needed Info
 		private CultureInfo culture = CultureInfo.CreateSpecificCulture("en-AU");
 
@@ -43,10 +47,12 @@ namespace LogCatExtension
 
 	    void OnEnable()
 	    {
-	        if( EditorPrefs.GetBool( "LogCatWindowEnabled", true ) )
-				LogCatAdapter.StartLogCat();
-
 			DevicesAdapter.RefreshDevices ();
+			RefreshFirstDevice ();
+
+	        if( EditorPrefs.GetBool( "LogCatWindowEnabled", true ) )
+				LogCatAdapter.StartLogCat(selectedDeviceId);
+
 			EditorApplication.update += UpdateView;
 	    }
 
@@ -76,7 +82,7 @@ namespace LogCatExtension
 			GUI.enabled = true;
 			GUI.color = Color.white;
 
-			onGiuDevicesDropDownTester ();
+			onGiuDevicesDropDown ();
 
 			onGuiUnityOnlyButton ();
 
@@ -89,12 +95,57 @@ namespace LogCatExtension
 			GUILayout.EndHorizontal();
 		}
 
-		private void onGiuDevicesDropDownTester ()
+		private void onGiuDevicesDropDown ()
+		{
+			GUILayout.Label ("Devices", GUILayout.Width (50f));
+			var listOfDevices = DevicesAdapter.GetDevicesList ();
+			if (listOfDevices.Count > 0) {
+
+				if (selectedDevice >= listOfDevices.Count) {
+					selectedDeviceId = String.Empty;
+					selectedDevice = 0;
+				}
+
+				string[] devicesNameStrings = new string[listOfDevices.Count];
+				string[] devicesIdStrings = new string[listOfDevices.Count];
+
+				int i = 0;
+				foreach (var device in listOfDevices) {
+					devicesNameStrings [i] = device.Name;
+					devicesIdStrings [i] = device.ID;
+					i++;
+				}
+
+				int oldSelectedDevice = selectedDevice;
+				selectedDevice = EditorGUILayout.Popup (selectedDevice, devicesNameStrings, GUILayout.Width (110f));
+				selectedDeviceId = devicesIdStrings [selectedDevice];
+				if (oldSelectedDevice != selectedDevice) {
+					if (LogCatAdapter.IsLogCatProcessRunning ()) {
+						LogCatAdapter.StartLogCat (selectedDeviceId);
+					}
+				}
+			} else {
+				selectedDeviceId = String.Empty;
+				selectedDevice = 0;
+			}
+		}
+
+		private void RefreshFirstDevice ()
 		{
 			var listOfDevices = DevicesAdapter.GetDevicesList ();
 			if (listOfDevices.Count > 0) {
-				DevicesAdapter.StopDevices ();
-			}
+				string[] devicesNameStrings = new string[listOfDevices.Count];
+				string[] devicesIdStrings = new string[listOfDevices.Count];
+
+				int i = 0;
+				foreach (var device in listOfDevices) {
+					devicesNameStrings [i] = device.Name;
+					devicesIdStrings [i] = device.ID;
+					i++;
+				}
+
+				selectedDeviceId = devicesIdStrings [selectedDevice];
+			} 
 		}
 
 		private void onGuiUnityOnlyButton(){
@@ -109,7 +160,7 @@ namespace LogCatExtension
 			}
 			else if( !LogCatAdapter.IsLogCatProcessRunning() && GUILayout.Button( "Start", GUILayout.Width( 55f ) ) )
 			{
-				LogCatAdapter.StartLogCat();
+				LogCatAdapter.StartLogCat(selectedDeviceId);
 				DevicesAdapter.RefreshDevices ();
 			}
 			if( GUILayout.Button( "Clear", GUILayout.Width( 55f ) ) )
