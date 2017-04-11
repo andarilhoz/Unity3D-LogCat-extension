@@ -2,11 +2,73 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using NUnit.Framework;
 
 namespace LogCatExtension
 {
 	internal class LogCatFilter
 	{
+		FilterConfiguration testConfig;
+		LogCatLog testLog;
+		List<LogCatLog> testLogList;
+
+		[TestFixtureSetUp]
+		public void Init() {
+			testConfig = new FilterConfiguration();
+			testLog = new LogCatLog ("E/TestLogCat: level:86, scale:100, status:3, health:2, present:true ");
+			testLogList = new List<LogCatLog> ();
+		}
+
+		[TestFixtureTearDown]
+		public void CleanUp() {
+			testConfig = null;
+			testLog = null;
+			testLogList.Clear ();
+		}
+
+		[SetUp]
+		public void SetUp() {
+			testConfig.prefilterOnlyUnity = false;
+			testConfig.filterError = true;
+			testConfig.filterWarning = true;
+			testConfig.filterDebug = true;
+			testConfig.filterInfo = true;
+			testConfig.filterVerbose = true;
+			testConfig.filterByString = "scale";
+			testConfig.filterByRegex = "[$~:^]";
+			testLogList.Add (testLog);
+		}
+
+		[Test]
+		public void LogCatFilterTest()
+		{
+			Assert.IsTrue(FilterByType(testLog, 'E'));
+		}
+
+		[Test]
+		public void LogCatFilterStringTest()
+		{
+			Assert.IsTrue(FilterByString(testLog, testConfig.filterByString));
+		}
+			
+		[Test]
+		public void LogCatFilterRegexTest()
+		{
+			Assert.IsFalse(FilterByRegex(testLog, "[$~^]"));
+			Assert.IsTrue(FilterByRegex(testLog, testConfig.filterByRegex));
+		}
+
+		[Test]
+		public void LogCatFilterFlowTest()
+		{
+			Assert.IsTrue((FilterLogList(testConfig, testLogList).Count == 1));
+		}
+
+		[TearDown]
+		public void TearDown() {
+			//log?
+		}
+
 		public static List<LogCatLog> FilterLogList( FilterConfiguration config, List<LogCatLog> fullLogList )
 		{
 			List<LogCatLog> filterLogList = new List<LogCatLog> ();
