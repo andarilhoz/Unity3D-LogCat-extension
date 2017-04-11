@@ -127,9 +127,14 @@ namespace LogCatExtension
 	    {
 	        GUILayout.BeginHorizontal();
 
-	        GUI.enabled = logCatProcess == null;
-	        prefilterOnlyUnity = GUILayout.Toggle( prefilterOnlyUnity, "Unity Logs Only", "Button", GUILayout.Width( 110f ) );
 	        GUI.enabled = true;
+			if(prefilterOnlyUnity != GUILayout.Toggle( prefilterOnlyUnity, "Unity Logs Only", "Button", GUILayout.Width( 110f ) ))
+			{
+				prefilterOnlyUnity = !prefilterOnlyUnity;
+				if (logCatProcess != null) {
+					StartLogCat ();
+				}
+			}
 
 	        GUI.color = Color.white;
 	        
@@ -142,7 +147,6 @@ namespace LogCatExtension
 	            StartLogCat();
 	        }
 
-	        GUI.enabled = true;
 	        if( GUILayout.Button( "Clear", GUILayout.Width( 55f ) ) )
 	        {
 	            ClearLogCat();
