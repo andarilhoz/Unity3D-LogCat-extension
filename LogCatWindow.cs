@@ -3,6 +3,7 @@ using UnityEditor;
 using System.Diagnostics;
 using System.Collections.Generic;
 using System;
+using System.Globalization;
 
 namespace LogCatExtension
 {
@@ -19,9 +20,15 @@ namespace LogCatExtension
 
 		private static FilterConfiguration ViewFilterConfiguration = new FilterConfiguration();
 		private static LogCatAdapter LogCatAdapter = new LogCatAdapter();
-		
+
 	    // Filtered GUI list scroll position
 	    private Vector2 scrollPosition = new Vector2( 0, 0 );
+
+		// Toggles
+		int selectedToggle = 0;
+		string[] toggleOptions = new string[] { "Str", "Regex", "TimeSpan" };
+
+		private CultureInfo culture = CultureInfo.CreateSpecificCulture("en-AU");
 
 	    // Add menu item named "LogCat" to the Window menu
 	    [MenuItem( "Window/LogCat - Android Logger" )]
@@ -76,10 +83,35 @@ namespace LogCatExtension
 	        {
 				LogCatAdapter.ClearLogCat();
 	        }
+				
+			selectedToggle = GUILayout.SelectionGrid(selectedToggle, toggleOptions, toggleOptions.Length, EditorStyles.miniButton, GUILayout.Width( 200f ));
+			if (selectedToggle == 0)
+			{
+				ViewFilterConfiguration.filterByString = GUILayout.TextField (ViewFilterConfiguration.filterByString, GUILayout.Height (20f));
+				ViewFilterConfiguration.filterByRegex = string.Empty;
+				ViewFilterConfiguration.filterTime = false;
+				GUI.color = color_error;
+			}
+			if (selectedToggle == 1)
+			{
+				ViewFilterConfiguration.filterByRegex = GUILayout.TextField (ViewFilterConfiguration.filterByRegex, GUILayout.Height (20f));
+				ViewFilterConfiguration.filterByString = string.Empty;
+				ViewFilterConfiguration.filterTime = false;
+				GUI.color = color_error;
+			}
+			if (selectedToggle == 2)
+			{
+				ViewFilterConfiguration.filterByTimeFrom = GUILayout.TextField (ViewFilterConfiguration.filterByTimeFrom, GUILayout.Height (20f));
+				ViewFilterConfiguration.filterByTimeTo = GUILayout.TextField (ViewFilterConfiguration.filterByTimeTo, GUILayout.Height (20f));
 
-	        // Create filters
-			ViewFilterConfiguration.filterByString = GUILayout.TextField( ViewFilterConfiguration.filterByString, GUILayout.Height( 20f ) );
-	        GUI.color = color_error;
+				DateTime timeTester;
+				bool textFromTimeValid = DateTime.TryParse(ViewFilterConfiguration.filterByTimeFrom, culture, DateTimeStyles.None, out timeTester);
+				bool textToTimeValid = DateTime.TryParse(ViewFilterConfiguration.filterByTimeTo, culture, DateTimeStyles.None, out timeTester);
+
+				ViewFilterConfiguration.filterTime = (textFromTimeValid && textToTimeValid);
+			}
+
+
 			ViewFilterConfiguration.filterError = GUILayout.Toggle( ViewFilterConfiguration.filterError, "Error", "Button", GUILayout.Width( 60f ) );
 	        GUI.color = color_warning;
 			ViewFilterConfiguration.filterWarning = GUILayout.Toggle( ViewFilterConfiguration.filterWarning, "Warning", "Button", GUILayout.Width( 60f ) );

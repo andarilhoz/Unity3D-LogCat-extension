@@ -13,5 +13,10 @@ namespace LogCatExtension
 		public bool filterInfo = true;
 		public bool filterVerbose = true;
 		public string filterByString = String.Empty;
+		public string filterByRegex = String.Empty;
+
+		public bool filterTime = false;
+		public string filterByTimeFrom = DateTime.Now.ToString("HH:MM:ss");
+		public string filterByTimeTo = DateTime.Now.ToString("HH:MM:ss");
 	}
 }
