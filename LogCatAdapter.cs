@@ -33,13 +33,7 @@ namespace LogCatExtension
 		{
 		}
 
-
-		public void StartLogCat()
-		{
-			if( logCatProcess != null )
-				StopLogCat();
-
-			// Start `adb logcat` (with additional optional arguments) process for filtering
+		ProcessStartInfo DefaultProcestStartInfo(){
 			ProcessStartInfo logProcessInfo = new ProcessStartInfo();
 			logProcessInfo.CreateNoWindow = false;
 			logProcessInfo.UseShellExecute = false;
@@ -47,10 +41,17 @@ namespace LogCatExtension
 			logProcessInfo.RedirectStandardError = true;
 			logProcessInfo.FileName = EditorPrefs.GetString( "AndroidSdkRoot" ) + "/platform-tools/adb";
 			logProcessInfo.WindowStyle = ProcessWindowStyle.Hidden;
+			return logProcessInfo;
+		}
 
-			// Add additional -s argument for filtering by Unity tag.
-			logProcessInfo.Arguments = LOGCAT;// TODO: "devices -l";
+		public void StartLogCat()
+		{
+			if( logCatProcess != null )
+				StopLogCat();
 
+			// Start `adb logcat` (with additional optional arguments) process for filtering
+			ProcessStartInfo logProcessInfo = DefaultProcestStartInfo ();
+			logProcessInfo.Arguments = LOGCAT;
 			logCatProcess = Process.Start( logProcessInfo );
 
 			logCatProcess.ErrorDataReceived += ( sender, errorLine ) =>
@@ -81,13 +82,7 @@ namespace LogCatExtension
 			}
 
 			// Start `adb logcat` with -c argument
-			ProcessStartInfo logClearProcessInfo = new ProcessStartInfo();
-			logClearProcessInfo.CreateNoWindow = true;
-			logClearProcessInfo.UseShellExecute = false;
-			logClearProcessInfo.FileName = EditorPrefs.GetString( "AndroidSdkRoot" ) + "/platform-tools/adb";
-			logClearProcessInfo.WindowStyle = ProcessWindowStyle.Hidden;
-
-			// Add additional -s argument for filtering by Unity tag.
+			ProcessStartInfo logClearProcessInfo = DefaultProcestStartInfo ();
 			logClearProcessInfo.Arguments = LOGCAT + " -c";
 
 			Process.Start( logClearProcessInfo );
