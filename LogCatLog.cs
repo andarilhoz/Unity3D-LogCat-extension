@@ -7,6 +7,7 @@ namespace LogCatExtension
 	{
 		public readonly char Type;
 		public readonly string Message;
+		public readonly DateTime TimeSpamp;
 
 		public LogCatLog( string data )
 		{
@@ -17,8 +18,8 @@ namespace LogCatExtension
 			// I - info
 			// V - verbose
 			Type = data[0];
-
-			Message = DateTime.Now.ToString( "H:mm:ss" ) + " | " + data.Substring( 2 );
+			TimeSpamp = DateTime.Now;
+			Message = TimeSpamp.ToString( "H:mm:ss" ) + " | " + data.Substring( 2 );
 		}
 
 		public Color GetBgColor()
