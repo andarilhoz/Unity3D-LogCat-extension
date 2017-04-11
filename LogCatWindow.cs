@@ -14,18 +14,10 @@ namespace LogCatExtension
 	    private static readonly Color color_warning = new Color( 0.95f, 0.95f, 0.3f, 1f );
 	    private static readonly Color color_debug = new Color( 0.5f, 0.5f, 0.75f, 1f );
 	    private static readonly Color color_background = new Color( 1.0f, 1.0f, 1.0f, 0.1f );
-	    
-	    // Filters
-	    private bool prefilterOnlyUnity = true;
-	    private bool filterError = true;
-	    private bool filterWarning = true;
-	    private bool filterDebug = true;
-	    private bool filterInfo = true;
-	    private bool filterVerbose = true;
-	    private string filterByString = String.Empty;
 
 	    private Texture2D backgroundTexture = null;
 
+		private static FilterConfiguration ViewFilterConfiguration = new FilterConfiguration();
 		private static LogCatAdapter LogCatAdapter = new LogCatAdapter();
 		
 	    // Filtered GUI list scroll position
@@ -44,60 +36,59 @@ namespace LogCatExtension
 	        if( EditorPrefs.GetBool( "LogCatWindowEnabled", true ) )
 				LogCatAdapter.StartLogCat();
 
-			EditorApplication.update += LogCatAdapter.UpdateLogs;
+			EditorApplication.update += UpdateView;
 	    }
 
 	    void OnDisable()
 	    {
-			EditorPrefs.SetBool( "LogCatWindowEnabled", LogCatAdapter.logCatProcess != null );
+			EditorPrefs.SetBool( "LogCatWindowEnabled", LogCatAdapter.IsLogCatProcessRunning() );
 
 			LogCatAdapter.StopLogCat();
 
-			EditorApplication.update -= LogCatAdapter.UpdateLogs;
+			EditorApplication.update -= UpdateView;
 	    }
 
+		void UpdateView()
+		{
+			if(LogCatAdapter.ShouldRepaint())
+				Repaint();
+		}
 
 	    void OnGUI()
 	    {
 	        GUILayout.BeginHorizontal();
 
 	        GUI.enabled = true;
-			if(prefilterOnlyUnity != GUILayout.Toggle( prefilterOnlyUnity, "Unity Logs Only", "Button", GUILayout.Width( 110f ) ))
-			{
-				prefilterOnlyUnity = !prefilterOnlyUnity;
-				if (LogCatAdapter.logCatProcess != null) {
-					LogCatAdapter.StartLogCat ();
-				}
-			}
+
+			ViewFilterConfiguration.prefilterOnlyUnity = GUILayout.Toggle (ViewFilterConfiguration.prefilterOnlyUnity, "Unity Logs Only", "Button", GUILayout.Width (110f));
 
 	        GUI.color = Color.white;
 	        
-			if( LogCatAdapter.logCatProcess != null && GUILayout.Button( "Stop", GUILayout.Width( 55f ) ) )
+			if( LogCatAdapter.IsLogCatProcessRunning() && GUILayout.Button( "Stop", GUILayout.Width( 55f ) ) )
 	        {
 				LogCatAdapter.StopLogCat();
 	        }
-			else if( LogCatAdapter.logCatProcess == null && GUILayout.Button( "Start", GUILayout.Width( 55f ) ) )
+			else if( !LogCatAdapter.IsLogCatProcessRunning() && GUILayout.Button( "Start", GUILayout.Width( 55f ) ) )
 	        {
 				LogCatAdapter.StartLogCat();
 	        }
-
 	        if( GUILayout.Button( "Clear", GUILayout.Width( 55f ) ) )
 	        {
 				LogCatAdapter.ClearLogCat();
 	        }
 
 	        // Create filters
-	        filterByString = GUILayout.TextField( filterByString, GUILayout.Height( 20f ) );
+			ViewFilterConfiguration.filterByString = GUILayout.TextField( ViewFilterConfiguration.filterByString, GUILayout.Height( 20f ) );
 	        GUI.color = color_error;
-	        filterError = GUILayout.Toggle( filterError, "Error", "Button", GUILayout.Width( 60f ) );
+			ViewFilterConfiguration.filterError = GUILayout.Toggle( ViewFilterConfiguration.filterError, "Error", "Button", GUILayout.Width( 60f ) );
 	        GUI.color = color_warning;
-	        filterWarning = GUILayout.Toggle( filterWarning, "Warning", "Button", GUILayout.Width( 60f ) );
+			ViewFilterConfiguration.filterWarning = GUILayout.Toggle( ViewFilterConfiguration.filterWarning, "Warning", "Button", GUILayout.Width( 60f ) );
 	        GUI.color = color_debug;
-	        filterDebug = GUILayout.Toggle( filterDebug, "Debug", "Button", GUILayout.Width( 60f ) );
+			ViewFilterConfiguration.filterDebug = GUILayout.Toggle( ViewFilterConfiguration.filterDebug, "Debug", "Button", GUILayout.Width( 60f ) );
 	        GUI.color = color_info;
-	        filterInfo = GUILayout.Toggle( filterInfo, "Info", "Button", GUILayout.Width( 60f ) );
+			ViewFilterConfiguration.filterInfo = GUILayout.Toggle( ViewFilterConfiguration.filterInfo, "Info", "Button", GUILayout.Width( 60f ) );
 	        GUI.color = Color.white;
-	        filterVerbose = GUILayout.Toggle( filterVerbose, "Verbose", "Button", GUILayout.Width( 60f ) );
+			ViewFilterConfiguration.filterVerbose = GUILayout.Toggle( ViewFilterConfiguration.filterVerbose, "Verbose", "Button", GUILayout.Width( 60f ) );
 
 	        GUILayout.EndHorizontal();
 
@@ -106,32 +97,20 @@ namespace LogCatExtension
 
 	        scrollPosition = GUILayout.BeginScrollView( scrollPosition, GUILayout.Height( Screen.height - 45 ) );
 
-	        // Show log entries
-	        bool shouldFilterByString = filterByString.Length > 1;
-			for( int index = LogCatAdapter.oldestLogIndex, i = 0; i < count; i++ )
-	        {
-				LogCatLog log = LogCatAdapter.logsList[index];
-
-	            // Filter
-	            if( ( !shouldFilterByString || log.Message.ToLower().Contains( filterByString.ToLower() ) ) &&
-	                (  filterError && log.Type == 'E'
-	                || filterWarning && log.Type == 'W'
-	                || filterDebug && log.Type == 'D'
-	                || filterInfo && log.Type == 'I'
-	                || filterVerbose && log.Type == 'V' ) )
-	            {
-	                GUI.backgroundColor = log.GetBgColor();
-					EditorGUILayout.BeginHorizontal( lineStyle );
-					{
-						EditorGUILayout.SelectableLabel(log.Message, EditorStyles.label, GUILayout.Height(EditorGUIUtility.singleLineHeight));
-					}
-					EditorGUILayout.EndHorizontal();
-	            }
-
-				index = ( index + 1 ) % LogCatAdapter.CAPACITY;
-	        }
-
-	        GUILayout.EndScrollView();
+			List<LogCatLog> fullLogCatList = LogCatAdapter.GetLogsList ();
+			List<LogCatLog> filteredLogCatList = LogCatFilter.FilterLogList (ViewFilterConfiguration, fullLogCatList);
+	        
+			// Show log entries
+			foreach (var logCatLog in filteredLogCatList) {
+				GUI.backgroundColor = logCatLog.GetBgColor();
+				EditorGUILayout.BeginHorizontal( lineStyle );
+				{
+					EditorGUILayout.SelectableLabel(logCatLog.Message, EditorStyles.label, GUILayout.Height(EditorGUIUtility.singleLineHeight));
+				}
+				EditorGUILayout.EndHorizontal();
+			}
+		   
+			GUILayout.EndScrollView();
 	    }
 
 	    private Texture2D MakeTexture( int width, int height, Color col )
@@ -150,6 +129,5 @@ namespace LogCatExtension
 
 	        return backgroundTexture;
 	    }
-
 	}
 }
