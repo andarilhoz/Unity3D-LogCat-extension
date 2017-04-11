@@ -11,7 +11,7 @@ namespace LogCatExtension
 		public Device( string data )
 		{
 			ID = data.Substring(0, data.IndexOf(" "));
-			Name = data.Substring(data.LastIndexOf(":")).TrimStart();
+			Name = data.Substring(data.LastIndexOf(":") + 1).TrimStart();
 		}
 	}
 }

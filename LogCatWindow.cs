@@ -9,6 +9,11 @@ namespace LogCatExtension
 {
 	public class LogCatWindow : EditorWindow
 	{   
+		//LogCatExtensions 
+		private static FilterConfiguration ViewFilterConfiguration = new FilterConfiguration();
+		private static LogCatAdapter LogCatAdapter = new LogCatAdapter();
+		private static DevicesAdapter DevicesAdapter = new DevicesAdapter();
+
 	    //COLORS Cache
 	    private static readonly Color color_error = new Color( 0.75f, 0.5f, 0.5f, 1f );
 	    private static readonly Color color_info = new Color( 0.5f, 0.75f, 0.5f, 1f );
@@ -17,9 +22,6 @@ namespace LogCatExtension
 	    private static readonly Color color_background = new Color( 1.0f, 1.0f, 1.0f, 0.1f );
 
 	    private Texture2D backgroundTexture = null;
-
-		private static FilterConfiguration ViewFilterConfiguration = new FilterConfiguration();
-		private static LogCatAdapter LogCatAdapter = new LogCatAdapter();
 
 	    // Filtered GUI list scroll position
 	    private Vector2 scrollPosition = new Vector2( 0, 0 );
@@ -44,6 +46,7 @@ namespace LogCatExtension
 	        if( EditorPrefs.GetBool( "LogCatWindowEnabled", true ) )
 				LogCatAdapter.StartLogCat();
 
+			DevicesAdapter.RefreshDevices ();
 			EditorApplication.update += UpdateView;
 	    }
 
@@ -52,7 +55,7 @@ namespace LogCatExtension
 			EditorPrefs.SetBool( "LogCatWindowEnabled", LogCatAdapter.IsLogCatProcessRunning() );
 
 			LogCatAdapter.StopLogCat();
-
+			DevicesAdapter.StopDevices ();
 			EditorApplication.update -= UpdateView;
 	    }
 
@@ -73,6 +76,8 @@ namespace LogCatExtension
 			GUI.enabled = true;
 			GUI.color = Color.white;
 
+			onGiuDevicesDropDownTester ();
+
 			onGuiUnityOnlyButton ();
 
 			onGuiStartStopButtons ();	
@@ -84,6 +89,14 @@ namespace LogCatExtension
 			GUILayout.EndHorizontal();
 		}
 
+		private void onGiuDevicesDropDownTester ()
+		{
+			var listOfDevices = DevicesAdapter.GetDevicesList ();
+			if (listOfDevices.Count > 0) {
+				DevicesAdapter.StopDevices ();
+			}
+		}
+
 		private void onGuiUnityOnlyButton(){
 			ViewFilterConfiguration.prefilterOnlyUnity = GUILayout.Toggle (ViewFilterConfiguration.prefilterOnlyUnity, "Unity Logs Only", "Button", GUILayout.Width (110f));
 		}
@@ -92,14 +105,17 @@ namespace LogCatExtension
 			if( LogCatAdapter.IsLogCatProcessRunning() && GUILayout.Button( "Stop", GUILayout.Width( 55f ) ) )
 			{
 				LogCatAdapter.StopLogCat();
+				DevicesAdapter.RefreshDevices ();
 			}
 			else if( !LogCatAdapter.IsLogCatProcessRunning() && GUILayout.Button( "Start", GUILayout.Width( 55f ) ) )
 			{
 				LogCatAdapter.StartLogCat();
+				DevicesAdapter.RefreshDevices ();
 			}
 			if( GUILayout.Button( "Clear", GUILayout.Width( 55f ) ) )
 			{
 				LogCatAdapter.ClearLogCat();
+				DevicesAdapter.RefreshDevices ();
 			}
 		}
 
