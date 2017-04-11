@@ -28,6 +28,7 @@ namespace LogCatExtension
 		int selectedToggle = 0;
 		string[] toggleOptions = new string[] { "Str", "Regex", "TimeSpan" };
 
+		// Time needed Info
 		private CultureInfo culture = CultureInfo.CreateSpecificCulture("en-AU");
 
 	    // Add menu item named "LogCat" to the Window menu
@@ -63,27 +64,46 @@ namespace LogCatExtension
 
 	    void OnGUI()
 	    {
-	        GUILayout.BeginHorizontal();
+			onGuiTopView ();
+			onGuiLogCatView ();
+	    }
 
-	        GUI.enabled = true;
+		private void onGuiTopView(){
+			GUILayout.BeginHorizontal();
+			GUI.enabled = true;
+			GUI.color = Color.white;
 
+			onGuiUnityOnlyButton ();
+
+			onGuiStartStopButtons ();	
+
+			onGuiFilterTabs ();
+
+			onGuiFilterButtons ();
+
+			GUILayout.EndHorizontal();
+		}
+
+		private void onGuiUnityOnlyButton(){
 			ViewFilterConfiguration.prefilterOnlyUnity = GUILayout.Toggle (ViewFilterConfiguration.prefilterOnlyUnity, "Unity Logs Only", "Button", GUILayout.Width (110f));
+		}
 
-	        GUI.color = Color.white;
-	        
+		private void onGuiStartStopButtons(){
 			if( LogCatAdapter.IsLogCatProcessRunning() && GUILayout.Button( "Stop", GUILayout.Width( 55f ) ) )
-	        {
+			{
 				LogCatAdapter.StopLogCat();
-	        }
+			}
 			else if( !LogCatAdapter.IsLogCatProcessRunning() && GUILayout.Button( "Start", GUILayout.Width( 55f ) ) )
-	        {
+			{
 				LogCatAdapter.StartLogCat();
-	        }
-	        if( GUILayout.Button( "Clear", GUILayout.Width( 55f ) ) )
-	        {
+			}
+			if( GUILayout.Button( "Clear", GUILayout.Width( 55f ) ) )
+			{
 				LogCatAdapter.ClearLogCat();
-	        }
-				
+			}
+		}
+
+		private void onGuiFilterTabs(){
 			selectedToggle = GUILayout.SelectionGrid(selectedToggle, toggleOptions, toggleOptions.Length, EditorStyles.miniButton, GUILayout.Width( 200f ));
 			if (selectedToggle == 0)
 			{
@@ -110,28 +130,29 @@ namespace LogCatExtension
 
 				ViewFilterConfiguration.filterTime = (textFromTimeValid && textToTimeValid);
 			}
+		}
 
-
+		private void onGuiFilterButtons(){
 			ViewFilterConfiguration.filterError = GUILayout.Toggle( ViewFilterConfiguration.filterError, "Error", "Button", GUILayout.Width( 60f ) );
-	        GUI.color = color_warning;
+			GUI.color = color_warning;
 			ViewFilterConfiguration.filterWarning = GUILayout.Toggle( ViewFilterConfiguration.filterWarning, "Warning", "Button", GUILayout.Width( 60f ) );
-	        GUI.color = color_debug;
+			GUI.color = color_debug;
 			ViewFilterConfiguration.filterDebug = GUILayout.Toggle( ViewFilterConfiguration.filterDebug, "Debug", "Button", GUILayout.Width( 60f ) );
-	        GUI.color = color_info;
+			GUI.color = color_info;
 			ViewFilterConfiguration.filterInfo = GUILayout.Toggle( ViewFilterConfiguration.filterInfo, "Info", "Button", GUILayout.Width( 60f ) );
-	        GUI.color = Color.white;
+			GUI.color = Color.white;
 			ViewFilterConfiguration.filterVerbose = GUILayout.Toggle( ViewFilterConfiguration.filterVerbose, "Verbose", "Button", GUILayout.Width( 60f ) );
+		}
 
-	        GUILayout.EndHorizontal();
+		private void onGuiLogCatView(){
+			GUIStyle lineStyle = new GUIStyle();
+			lineStyle.normal.background = MakeTexture( 600, 1, color_background );
 
-	        GUIStyle lineStyle = new GUIStyle();
-	        lineStyle.normal.background = MakeTexture( 600, 1, color_background );
-
-	        scrollPosition = GUILayout.BeginScrollView( scrollPosition, GUILayout.Height( Screen.height - 45 ) );
+			scrollPosition = GUILayout.BeginScrollView( scrollPosition, GUILayout.Height( Screen.height - 45 ) );
 
 			List<LogCatLog> fullLogCatList = LogCatAdapter.GetLogsList ();
 			List<LogCatLog> filteredLogCatList = LogCatFilter.FilterLogList (ViewFilterConfiguration, fullLogCatList);
-	        
+
 			// Show log entries
 			foreach (var logCatLog in filteredLogCatList) {
 				GUI.backgroundColor = logCatLog.GetBgColor();
@@ -141,9 +162,9 @@ namespace LogCatExtension
 				}
 				EditorGUILayout.EndHorizontal();
 			}
-		   
+
 			GUILayout.EndScrollView();
-	    }
+		}
 
 	    private Texture2D MakeTexture( int width, int height, Color col )
 	    {
