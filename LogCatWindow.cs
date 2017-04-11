@@ -187,9 +187,11 @@ namespace LogCatExtension
 	                || filterVerbose && log.Type == 'V' ) )
 	            {
 	                GUI.backgroundColor = log.GetBgColor();
-	                GUILayout.BeginHorizontal( lineStyle );
-	                GUILayout.Label( log.Message );
-	                GUILayout.EndHorizontal();
+					EditorGUILayout.BeginHorizontal( lineStyle );
+					{
+						EditorGUILayout.SelectableLabel(log.Message, EditorStyles.label, GUILayout.Height(EditorGUIUtility.singleLineHeight));
+					}
+					EditorGUILayout.EndHorizontal();
 	            }
 
 	            index = ( index + 1 ) % CAPACITY;
