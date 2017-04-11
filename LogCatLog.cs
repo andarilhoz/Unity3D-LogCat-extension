@@ -1,8 +1,9 @@
 ﻿using System;
+using UnityEngine;
 
 namespace LogCatExtension
 {
-	private class LogCatLog
+	internal class LogCatLog
 	{
 		public readonly char Type;
 		public readonly string Message;

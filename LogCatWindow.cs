@@ -14,6 +14,9 @@ namespace LogCatExtension
 	    private const double UPDATE_FREQUENCY = 0.1;
 
 	    private double nextUpdateTime = 0f;
+
+		//LOGCAT output format
+		private const string LOGCAT = "logcat -v tag";
 	    
 	    //COLORS Cache
 	    private static readonly Color color_error = new Color( 0.75f, 0.5f, 0.5f, 1f );
@@ -206,7 +209,7 @@ namespace LogCatExtension
 	        logProcessInfo.WindowStyle = ProcessWindowStyle.Hidden;
 
 	        // Add additional -s argument for filtering by Unity tag.
-	        logProcessInfo.Arguments = "logcat" + ( prefilterOnlyUnity ? " -s Unity" : "" );
+			logProcessInfo.Arguments = LOGCAT + ( prefilterOnlyUnity ? " -s Unity" : "" );
 
 	        logCatProcess = Process.Start( logProcessInfo );
 
@@ -245,7 +248,7 @@ namespace LogCatExtension
 	        logClearProcessInfo.WindowStyle = ProcessWindowStyle.Hidden;
 
 	        // Add additional -s argument for filtering by Unity tag.
-	        logClearProcessInfo.Arguments = "logcat -c";
+			logClearProcessInfo.Arguments = LOGCAT + " -c";
 
 	        Process.Start( logClearProcessInfo );
 
