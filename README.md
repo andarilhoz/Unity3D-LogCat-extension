@@ -21,6 +21,11 @@ How to use
 3. Click Window -> LogCat - Android Logger
 4. Start logging by clicking "Start logging" button!
 
+How to Test
+---------------------
+1. Click Window -> Editor Tests Runner
+2. Start testing by clicking "Run All" button!
+
 Screenshots
 ---------------------
 
