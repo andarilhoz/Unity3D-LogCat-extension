@@ -27,12 +27,12 @@ namespace LogCatExtension
 	    private Vector2 scrollPosition = new Vector2( 0, 0 );
 
 		// Toggles
-		int selectedToggle = 0;
-		string[] toggleOptions = new string[] { "Str", "Regex", "TimeSpan" };
+		private int selectedToggle = 0;
+		private string[] toggleOptions = new string[] { "Str", "Regex", "TimeSpan" };
 
 		// Devices
-		int selectedDevice = 0;
-		string selectedDeviceId = String.Empty;
+		private int selectedDevice = 0;
+		private string selectedDeviceId = String.Empty;
 
 		// Time needed Info
 		private CultureInfo culture = CultureInfo.CreateSpecificCulture("en-AU");

@@ -15,7 +15,7 @@ namespace LogCatExtension
 		private Process devicesProcess = null;
 
 		//Devices list
-		List<Device> devicesList = new List<Device> ();
+		private List<Device> devicesList = new List<Device> ();
 
 		public DevicesAdapter()
 		{

@@ -8,9 +8,9 @@ namespace LogCatExtension
 {
 	internal class LogCatFilter
 	{
-		FilterConfiguration testConfig;
-		LogCatLog testLog;
-		List<LogCatLog> testLogList;
+		private FilterConfiguration testConfig;
+		private LogCatLog testLog;
+		private List<LogCatLog> testLogList;
 
 		[TestFixtureSetUp]
 		public void Init() {
